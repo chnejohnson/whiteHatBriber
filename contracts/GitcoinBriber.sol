@@ -9,12 +9,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract GitcoinBriber is ERC20 {
     uint256 public startTime;
     uint256 public endTime;
+    address payable public project;
 
-    constructor(uint256 _startTime, uint256 _endTime)
-        ERC20("AirDrop Token", "ADT")
-    {
+    constructor(
+        uint256 _startTime,
+        uint256 _endTime,
+        address payable _project
+    ) ERC20("AirDrop Token", "ADT") {
         startTime = _startTime;
         endTime = _endTime;
+        project = _project;
     }
 
     modifier isBribingPeriod() {
@@ -29,5 +33,10 @@ contract GitcoinBriber is ERC20 {
         _mint(recipient, amount);
     }
 
-    function acceptBribe() public {}
+    function acceptBribe() public payable {
+        (bool sent, bytes memory data) = project.call{value: msg.value}("");
+        require(sent, "GitcoinBriber: Failed to send Ether");
+
+        sendReward(msg.sender, msg.value);
+    }
 }
